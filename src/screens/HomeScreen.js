@@ -1,421 +1,255 @@
+import React, { useState } from 'react';
 
-import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  FlatList,
   Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Alert,
+  StyleSheet,
   SafeAreaView,
   StatusBar,
 } from 'react-native';
 
-import {
-  useFonts,
-  Poppins_400Regular,
-  Poppins_500Medium,
-  Poppins_600SemiBold,
-  Poppins_700Bold,
-} from '@expo-google-fonts/poppins';
+import MahasiswaScreen from './MahasiswaScreen';
+import AccountScreen from './AccountScreen';
 
-import { collection, getDocs } from 'firebase/firestore';
+// Ikon navigasi tanpa SVG
+function TabIcon({ type, active }) {
+  const iconColor = active ? '#702449' : '#A99AA6';
 
-import { db } from '../config/firebase';
-import { useAuth } from '../context/AuthContext';
-import { logoutUser } from '../services/authService';
-
-export default function HomeScreen() {
-  const { user } = useAuth();
-
-  const [mahasiswa, setMahasiswa] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-
-  const [fontsLoaded] = useFonts({
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
-  });
-
-  const loadMahasiswa = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-
-      setError('');
-
-      const snapshot = await getDocs(
-        collection(db, 'mahasiswa')
-      );
-
-      const data = snapshot.docs.map((item) => ({
-        id: item.id,
-        ...item.data(),
-      }));
-
-      setMahasiswa(data);
-    } catch (err) {
-      console.log('Firestore error:', err);
-      setError('Gagal mengambil data mahasiswa.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    loadMahasiswa();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-    } catch (err) {
-      Alert.alert('Logout Gagal', err.message);
-    }
-  };
-
-  const renderMahasiswa = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardAccent} />
-
-      <View style={styles.cardContent}>
-        <Text style={styles.studentName}>
-          {item.nama || 'Nama tidak tersedia'}
-        </Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>NIM</Text>
-          <Text style={styles.studentInfo}>
-            {item.nim || '-'}
-          </Text>
+  if (type === 'mahasiswa') {
+    return (
+      <View style={styles.listIcon}>
+        <View style={styles.iconRow}>
+          <View style={[styles.iconDot, { backgroundColor: iconColor }]} />
+          <View style={[styles.iconLine, { backgroundColor: iconColor }]} />
         </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Program Studi</Text>
-          <Text style={styles.studentInfo}>
-            {item.prodi || '-'}
-          </Text>
+        <View style={styles.iconRow}>
+          <View style={[styles.iconDot, { backgroundColor: iconColor }]} />
+          <View style={[styles.iconLine, { backgroundColor: iconColor }]} />
         </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Semester</Text>
-          <Text style={styles.studentInfo}>
-            {item.semester ?? '-'}
-          </Text>
+        <View style={styles.iconRow}>
+          <View style={[styles.iconDot, { backgroundColor: iconColor }]} />
+          <View style={[styles.iconLine, { backgroundColor: iconColor }]} />
         </View>
       </View>
-    </View>
-  );
-
-  if (!fontsLoaded) {
-    return (
-      <SafeAreaView style={styles.loadingContainer}>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="#48142F"
-        />
-        <ActivityIndicator size="large" color="#FFFFFF" />
-      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#48142F"
+    <View style={styles.userIcon}>
+      <View
+        style={[
+          styles.userHead,
+          { backgroundColor: iconColor },
+        ]}
       />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.profile}>
-          <Text style={styles.greeting}>
-            Selamat Datang,
-          </Text>
+      <View
+        style={[
+          styles.userBody,
+          { backgroundColor: iconColor },
+        ]}
+      />
+    </View>
+  );
+}
 
-          <Text style={styles.userName}>
-            {user?.displayName || 'Pengguna'}
-          </Text>
+export default function HomeScreen() {
+  const [activeTab, setActiveTab] = useState('mahasiswa');
 
-          <Text style={styles.email} numberOfLines={1}>
-            {user?.email || ''}
-          </Text>
-        </View>
+  const isMahasiswa = activeTab === 'mahasiswa';
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.logoutButton,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>
-            Logout
-          </Text>
-        </Pressable>
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        backgroundColor="#F4EDF3"
+        barStyle="dark-content"
+      />
+
+      {/* Page Content */}
+      <View style={styles.screenContent}>
+        {isMahasiswa ? (
+          <MahasiswaScreen />
+        ) : (
+          <AccountScreen />
+        )}
       </View>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionTitle}>
-              Data Mahasiswa
-            </Text>
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        {/* Daftar Mahasiswa - Kiri */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.tabButton,
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setActiveTab('mahasiswa')}
+          accessibilityRole="tab"
+          accessibilityState={{
+            selected: isMahasiswa,
+          }}
+        >
+          {isMahasiswa ? (
+            <View style={styles.activeIndicator} />
+          ) : null}
 
-            <Text style={styles.sectionSubtitle}>
-              {mahasiswa.length} mahasiswa tersimpan di Firebase.
-            </Text>
-          </View>
-        </View>
-
-        {loading ? (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator
-              size="large"
-              color="#48142F"
-            />
-
-            <Text style={styles.loaderText}>
-              Memuat data mahasiswa...
-            </Text>
-          </View>
-        ) : error ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {error}
-            </Text>
-
-            <Pressable
-              style={styles.retryButton}
-              onPress={() => loadMahasiswa()}
-            >
-              <Text style={styles.retryText}>
-                Coba Lagi
-              </Text>
-            </Pressable>
-          </View>
-        ) : (
-          <FlatList
-            data={mahasiswa}
-            renderItem={renderMahasiswa}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => loadMahasiswa(true)}
-                colors={['#48142F']}
-                tintColor="#48142F"
-              />
-            }
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  Belum ada data mahasiswa.
-                </Text>
-              </View>
-            }
+          <TabIcon
+            type="mahasiswa"
+            active={isMahasiswa}
           />
-        )}
+
+          <Text
+            style={[
+              styles.tabLabel,
+              isMahasiswa && styles.activeTabLabel,
+            ]}
+          >
+            Daftar Mahasiswa
+          </Text>
+        </Pressable>
+
+        {/* Akun - Kanan */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.tabButton,
+            pressed && styles.tabPressed,
+          ]}
+          onPress={() => setActiveTab('akun')}
+          accessibilityRole="tab"
+          accessibilityState={{
+            selected: !isMahasiswa,
+          }}
+        >
+          {!isMahasiswa ? (
+            <View style={styles.activeIndicator} />
+          ) : null}
+
+          <TabIcon
+            type="akun"
+            active={!isMahasiswa}
+          />
+
+          <Text
+            style={[
+              styles.tabLabel,
+              !isMahasiswa && styles.activeTabLabel,
+            ]}
+          >
+            Akun
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#48142F',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   container: {
     flex: 1,
     backgroundColor: '#F4EDF3',
   },
 
-  // Header
-  header: {
-    backgroundColor: '#48142F',
-    paddingHorizontal: 25,
-    paddingTop: 45,
-    paddingBottom: 35,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  profile: {
+  screenContent: {
     flex: 1,
-    marginRight: 15,
-  },
-
-  greeting: {
-    color: '#D9AFC7',
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 12,
-  },
-
-  userName: {
-    color: '#FFFFFF',
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 21,
-    marginTop: 4,
-  },
-
-  email: {
-    color: '#E2CEDA',
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 11,
-    marginTop: 3,
-  },
-
-  logoutButton: {
-    backgroundColor: '#F4EDF3',
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  logoutText: {
-    color: '#48142F',
-    fontFamily: 'Poppins_600SemiBold',
-    fontSize: 11,
-  },
-
-  buttonPressed: {
-    opacity: 0.75,
-  },
-
-  // Main Content
-  content: {
-    flex: 1,
-    paddingHorizontal: 22,
-    paddingTop: 20,
-  },
-
-  sectionHeader: {
-    marginBottom: 20,
-  },
-
-  sectionTitle: {
-    fontFamily: 'Poppins_700Bold',
-    fontSize: 21,
-    color: '#48142F',
-  },
-
-  sectionSubtitle: {
-    color: '#897D89',
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 11,
-    marginTop: 4,
-  },
-
-  // Student Card
-  list: {
-    paddingBottom: 25,
-    flexGrow: 1,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 17,
-    marginBottom: 14,
-    flexDirection: 'row',
     overflow: 'hidden',
-    elevation: 2,
   },
 
-  cardAccent: {
-    width: 5,
-    backgroundColor: '#702449',
-  },
-
-  cardContent: {
-    flex: 1,
-    padding: 17,
-  },
-
-  studentName: {
-    color: '#48142F',
-    fontFamily: 'Poppins_600SemiBold',
-    fontSize: 15,
-    marginBottom: 11,
-  },
-
-  infoRow: {
+  // Bottom Navigation
+  bottomNav: {
+    height: 68,
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: 5,
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: '#EDE3EB',
+    paddingHorizontal: 12,
+    elevation: 12,
   },
 
-  infoLabel: {
-    width: 105,
-    color: '#958594',
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 11,
-  },
-
-  studentInfo: {
+  tabButton: {
     flex: 1,
-    color: '#6F6872',
-    fontFamily: 'Poppins_500Medium',
-    fontSize: 11,
-  },
-
-  // Loading and Empty State
-  loaderContainer: {
-    alignItems: 'center',
-    marginTop: 65,
-  },
-
-  loaderText: {
-    fontFamily: 'Poppins_400Regular',
-    color: '#897D89',
-    fontSize: 11,
-    marginTop: 12,
-  },
-
-  emptyContainer: {
-    alignItems: 'center',
+    height: '100%',
     justifyContent: 'center',
-    paddingTop: 55,
+    alignItems: 'center',
+    gap: 5,
+    position: 'relative',
   },
 
-  emptyText: {
-    color: '#897D89',
-    fontFamily: 'Poppins_400Regular',
-    fontSize: 12,
-    textAlign: 'center',
+  tabPressed: {
+    opacity: 0.7,
   },
 
-  retryButton: {
-    backgroundColor: '#48142F',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 11,
-    marginTop: 18,
+  activeIndicator: {
+    position: 'absolute',
+    top: 0,
+    width: 43,
+    height: 3,
+    backgroundColor: '#702449',
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
   },
 
-  retryText: {
-    color: '#FFFFFF',
+  tabLabel: {
+    color: '#A99AA6',
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 10,
+  },
+
+  activeTabLabel: {
+    color: '#702449',
     fontFamily: 'Poppins_600SemiBold',
-    fontSize: 11,
+  },
+
+  // Mahasiswa Icon
+  listIcon: {
+    width: 23,
+    height: 21,
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+
+  iconDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+
+  iconLine: {
+    width: 14,
+    height: 2,
+    borderRadius: 2,
+  },
+
+  // Account Icon
+  userIcon: {
+    width: 24,
+    height: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 3,
+  },
+
+  userHead: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+  },
+
+  userBody: {
+    width: 19,
+    height: 9,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
   },
 });
